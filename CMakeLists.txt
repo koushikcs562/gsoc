@@ -445,7 +445,7 @@ elseif(APPLE)
         "The target system processor"
       )
     else()
-      if(QT6)
+      if(QT6
         # Minimum macOS version supported by Qt 6.5
         set(
           CMAKE_OSX_DEPLOYMENT_TARGET
@@ -2693,26 +2693,28 @@ endif()
 # Tests
 #
 
-find_package(GTest CONFIG)
-default_option(BUILD_TESTING "Build with Unittests" "GTest_FOUND")
+include(CTest)  # ensures BUILD_TESTING option exists
+
 if(BUILD_TESTING)
-  if(GTest_FOUND)
-    message(STATUS "Found GTest: Unittests enabled")
-  else()
-    message(FATAL_ERROR "GTest: not found")
-  endif()
+  add_compile_definitions(BUILD_TESTING)
+  find_package(GTest REQUIRED)
+  message(STATUS "Found GTest: Unittests enabled")
 endif()
 
-find_package(benchmark)
-default_option(BUILD_BENCH "Build mixxx-benchmark" "benchmark_FOUND")
-if(BUILD_BENCH AND BUILD_TESTING)
-  if(benchmark_FOUND)
+# Option to enable benchmarks
+option(BUILD_BENCH "Build mixxx-benchmark" OFF)
+
+if(BUILD_BENCH)
+  find_package(benchmark)
+
+  if(BUILD_TESTING AND benchmark_FOUND)
     message(STATUS "Found google-benchmark: mixxx-benchmark enabled")
+    # Add your benchmark targets here
+  elseif(BUILD_BENCH AND NOT BUILD_TESTING)
+    message(FATAL_ERROR "Benchmark needs Unittests (-DBUILD_TESTING=ON)")
   else()
     message(FATAL_ERROR "google-benchmark: not found")
   endif()
-elseif(BUILD_BENCH AND NOT BUILD_TESTING)
-  message(FATAL_ERROR "Benchmark needs Unittests (-DBUILD_TESTING=ON)")
 endif()
 
 # FFmpeg support
